@@ -26,46 +26,27 @@
 ####################################################################################
 
 ####################################################################################
-# Welcome to the CMake build system for RTTR( Run Time Type Reflection).           #
-# This is the main file where the general build environment is set-up and the      #
-# the build configuration options are initialized.                                 #
+# Search and install 3rd party libraries
+#
 ####################################################################################
 
-cmake_minimum_required (VERSION 3.0)
+MESSAGE(STATUS ${LIBRARY_OUTPUT_DIRECTORY})
+MESSAGE(STATUS "Finding 3rd party libs...")
+MESSAGE(STATUS "===========================")
 
-project ("rttr" LANGUAGES CXX)
+set(RAPID_JSON_DIR ${RTTR_3RD_PARTY_DIR}/rapidjson-1.1.0)
+set(NONIUS_DIR ${RTTR_3RD_PARTY_DIR}/nonius-1.1.2)
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
+# Prepare "Catch" library for other executables
+set(CATCH_INCLUDE_DIR ${RTTR_3RD_PARTY_DIR}/catch-1.12.0)
+add_library(Catch INTERFACE)
+add_library(Catch2::Catch ALIAS Catch)
+target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
 
-if (CMAKE_BUILD_TYPE STREQUAL "")
-  # CMake defaults to leaving CMAKE_BUILD_TYPE empty. This screws up
-  # differentiation between debug and release builds.
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build, options are: None (CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
-endif ()
+# Find chai script
+set(CHAISCRIPT_INCLUDE_DIR ${RTTR_3RD_PARTY_DIR}/chaiscript-6.1.0)
+add_library(ChaiScript INTERFACE)
+add_library(ChaiScript::ChaiScript ALIAS ChaiScript)
+target_include_directories(ChaiScript INTERFACE ${CHAISCRIPT_INCLUDE_DIR})
 
-# our little cmake helper functions
-include(RttrUtility)
-
-# set up option variable for cmake
-option(BUILD_RTTR_DYNAMIC "Build the dynamic/shared version of RTTR library" OFF)
-option(BUILD_STATIC "Build RTTR as static library" ON)
-option(BUILD_WITH_STATIC_RUNTIME_LIBS "Link against the static runtime libraries" OFF)
-option(BUILD_WITH_RTTI "Enable build with C++ runtime type information for compilation" ON)
-option(USE_PCH "Use precompiled header files for compilation" ON)
-
-# one precompiled headers cannot be used for multiple ninja targets
-# thats why we have to disable this option, when BUILD_STATIC or
-# BUILD_WITH_STATIC_RUNTIME_LIBS is ON (every target will create the same PCH.pch file)
-# to get it working, we need the feature to enable different source properties
-# for different targets
-if (USE_PCH)
-  if (BUILD_STATIC OR BUILD_WITH_STATIC_RUNTIME_LIBS)
-    set(USE_PCH FALSE)
-  endif()
-endif()
-
-include(RttrConfig)
-include(RttrThirdParty)
-
-# here we add our source code
-add_subdirectory(Source)
+MESSAGE(STATUS "Finished finding 3rd party libs!")
